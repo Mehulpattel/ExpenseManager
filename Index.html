@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Manager</title>
+    <style>
+        /* Inline CSS */
+
+        /* Reset some default styles */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        h1, h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .form-container, .filter-container, .expenses-container, .reports-container, .backup-container, .category-container {
+            background-color: #fff;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        form label {
+            display: block;
+            margin-bottom: 5px;
+            margin-top: 15px;
+        }
+
+        form input, form select, form textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+        }
+
+        form button {
+            padding: 10px 15px;
+            background-color: #28a745;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            border-radius: 3px;
+            margin-right: 10px;
+        }
+
+        form button:hover {
+            background-color: #218838;
+        }
+
+        #clear-filters {
+            background-color: #6c757d;
+        }
+
+        #clear-filters:hover {
+            background-color: #5a6268;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .actions button {
+            padding: 5px 10px;
+            margin: 2px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .actions .delete-btn {
+            background-color: #dc3545;
+            color: #fff;
+        }
+
+        .actions .delete-btn:hover {
+            background-color: #c82333;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            table, th, td {
+                font-size: 12px;
+            }
+
+            form button {
+                width: 100%;
+                margin-top: 10px;
+            }
+        }
+
+        /* Backup & Restore Styles */
+        .backup-container {
+            background-color: #fff;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .backup-container button {
+            padding: 10px 15px;
+            background-color: #007bff;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            border-radius: 3px;
+            margin: 5px;
+        }
+
+        .backup-container button:hover {
+            background-color: #0069d9;
+        }
+
+        /* Category Management Styles */
+        .category-container {
+            background-color: #fff;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        .category-container h2 {
+            margin-bottom: 15px;
+        }
+
+        .category-container button {
+            padding: 8px 12px;
+            background-color: #17a2b8;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            border-radius: 3px;
+            margin-top: 10px;
+        }
+
+        .category-container button:hover {
+            background-color: #138496;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1000; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto; /* 10% from the top and centered */
+            padding: 20px;
+            border: 1px solid #888;
+            width: 90%;
+            max-width: 500px; /* Could be more or less, depending on screen size */
+            border-radius: 5px;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Expense Manager</h1>
+        
+        <!-- Add Expense Form -->
+        <div class="form-container">
+            <h2>Add Expense</h2>
+            <form id="expense-form">
+                <label for="date">Date:</label>
+                <input type="date" id="date" required>
+
+                <label for="price">Price:</label>
+                <input type="number" id="price" step="0.01" required>
+
+                <label for="detail">Detail:</label>
+                <input type="text" id="detail" required>
+
+                <label for="category">Category:</label>
+                <select id="category" required>
+                    <option value="">Select Category</option>
+                    <!-- Categories will be populated dynamically -->
+                </select>
+
+                <label for="subcategory">Subcategory:</label>
+                <select id="subcategory" required>
+                    <option value="">Select Subcategory</option>
+                    <!-- Subcategories will be populated dynamically -->
+                </select>
+
+                <label for="note">Note:</label>
+                <textarea id="note" rows="3"></textarea>
+
+                <button type="submit">Add Expense</button>
+            </form>
+        </div>
+
+        <!-- Filter Section -->
+        <div class="filter-container">
+            <h2>Filter Expenses</h2>
+            <form id="filter-form">
+                <label for="filter-date">Date:</label>
+                <input type="date" id="filter-date">
+
+                <label for="filter-category">Category:</label>
+                <select id="filter-category">
+                    <option value="">All Categories</option>
+                    <!-- Categories will be populated dynamically -->
+                </select>
+
+                <label for="filter-subcategory">Subcategory:</label>
+                <select id="filter-subcategory">
+                    <option value="">All Subcategories</option>
+                    <!-- Subcategories will be populated dynamically -->
+                </select>
+
+                <button type="submit">Apply Filters</button>
+                <button type="button" id="clear-filters">Clear Filters</button>
+            </form>
+        </div>
+
+        <!-- Expenses List -->
+        <div class="expenses-container">
+            <h2>Expenses</h2>
+            <table id="expenses-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Price</th>
+                        <th>Detail</th>
+                        <th>Category</th>
+                        <th>Subcategory</th>
+                        <th>Note</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Expenses will be dynamically added here -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Reports Section -->
+        <div class="reports-container">
+            <h2>Reports</h2>
+            <p>Total Expenses: $<span id="total-expenses">0.00</span></p>
+            <canvas id="expenses-chart" width="400" height="200"></canvas>
+        </div>
+
+        <!-- Backup and Restore Section -->
+        <div class="backup-container">
+            <h2>Backup & Restore</h2>
+            <button id="export-btn">Export Data</button>
+            <input type="file" id="import-file" accept=".json" style="display: none;">
+            <button id="import-btn">Import Data</button>
+            <p id="backup-status" style="margin-top: 10px; color: green;"></p>
+        </div>
+
+        <!-- Category Management Section -->
+        <div class="category-container">
+            <h2>Manage Categories</h2>
+            <button id="add-category-btn">Add Category</button>
+            <button id="add-subcategory-btn">Add Subcategory</button>
+            <button id="edit-category-btn">Edit Category</button>
+            <button id="edit-subcategory-btn">Edit Subcategory</button>
+        </div>
+    </div>
+
+    <!-- Add Category Modal -->
+    <div id="add-category-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="close-add-category">&times;</span>
+            <h2>Add New Category</h2>
+            <form id="add-category-form">
+                <label for="new-category">Category Name:</label>
+                <input type="text" id="new-category" required>
+                <button type="submit">Add Category</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Subcategory Modal -->
+    <div id="add-subcategory-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="close-add-subcategory">&times;</span>
+            <h2>Add New Subcategory</h2>
+            <form id="add-subcategory-form">
+                <label for="new-subcategory-name">Subcategory Name:</label>
+                <input type="text" id="new-subcategory-name" required>
+
+                <label for="parent-category">Parent Category:</label>
+                <select id="parent-category" required>
+                    <option value="">Select Parent Category</option>
+                    <!-- Categories will be populated dynamically -->
+                </select>
+
+                <button type="submit">Add Subcategory</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Category Modal -->
+    <div id="edit-category-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="close-edit-category">&times;</span>
+            <h2>Edit Categories</h2>
+            <form id="edit-category-form">
+                <label for="select-edit-category">Select Category to Edit:</label>
+                <select id="select-edit-category" required>
+                    <option value="">Select Category</option>
+                    <!-- Categories will be populated dynamically -->
+                </select>
+
+                <label for="edit-category-name">New Category Name:</label>
+                <input type="text" id="edit-category-name" required>
+
+                <button type="submit">Update Category</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Subcategory Modal -->
+    <div id="edit-subcategory-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="close-edit-subcategory">&times;</span>
+            <h2>Edit Subcategories</h2>
+            <form id="edit-subcategory-form">
+                <label for="select-edit-subcategory">Select Subcategory to Edit:</label>
+                <select id="select-edit-subcategory" required>
+                    <option value="">Select Subcategory</option>
+                    <!-- Subcategories will be populated dynamically -->
+                </select>
+
+                <label for="edit-subcategory-name">New Subcategory Name:</label>
+                <input type="text" id="edit-subcategory-name" required>
+
+                <button type="submit">Update Subcategory</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Inline JavaScript
+
+        // Predefined Categories and Subcategories
+        const categoriesData = {
+            "Food": ["Groceries", "Restaurants", "Snacks"],
+            "Transportation": ["Bus", "Train", "Taxi", "Fuel"],
+            "Utilities": ["Electricity", "Water", "Internet"],
+            "Entertainment": ["Movies", "Games", "Concerts"],
+            // Add more categories and subcategories as needed
+        };
+
+        // Function to load categories from LocalStorage or initialize with predefined
+        function loadCategories() {
+            const storedCategories = JSON.parse(localStorage.getItem('categories'));
+            if (storedCategories && Object.keys(storedCategories).length > 0) {
+                return storedCategories;
+            } else {
+                // Initialize with predefined categories
+                localStorage.setItem('categories', JSON.stringify(categoriesData));
+                return categoriesData;
+            }
+        }
+
+        // Function to save categories to LocalStorage
+        function saveCategories(categories) {
+            localStorage.setItem('categories', JSON.stringify(categories));
+        }
+
+        // Initialize categories
+        let categories = loadCategories();
+
+        // Populate Category Dropdowns
+        function populateCategoryDropdown(dropdownId) {
+            const dropdown = document.getElementById(dropdownId);
+            dropdown.innerHTML = '<option value="">Select Category</option>';
+            Object.keys(categories).forEach(category => {
+                const option = document.createElement('option');
+                option.value = category;
+                option.textContent = category;
+                dropdown.appendChild(option);
+            });
+        }
+
+        // Populate Subcategory Dropdown based on selected Category
+        function populateSubcategoryDropdown(category, dropdownId, includeAllOption = false) {
+            const dropdown = document.getElementById(dropdownId);
+            dropdown.innerHTML = includeAllOption ? '<option value="">All Subcategories</option>' : '<option value="">Select Subcategory</option>';
+            if (category && categories[category]) {
+                categories[category].forEach(sub => {
+                    const option = document.createElement('option');
+                    option.value = sub;
+                    option.textContent = sub;
+                    dropdown.appendChild(option);
+                });
+            }
+        }
+
+        // Initial population of dropdowns
+        populateCategoryDropdown('category');
+        populateCategoryDropdown('filter-category');
+        populateCategoryDropdown('parent-category');
+        populateCategoryDropdown('select-edit-category');
+        populateCategoryDropdown('select-edit-subcategory');
+
+        // Event listeners for category changes to populate subcategories
+        document.getElementById('category').addEventListener('change', function() {
+            const selectedCategory = this.value;
+            populateSubcategoryDropdown(selectedCategory, 'subcategory');
+        });
+
+        document.getElementById('filter-category').addEventListener('change', function() {
+            const selectedCategory = this.value;
+            populateSubcategoryDropdown(selectedCategory, 'filter-subcategory', true);
+        });
+
+        document.getElementById('parent-category').addEventListener('change', function() {
+            const selectedCategory = this.value;
+            populateSubcategoryDropdown(selectedCategory, 'new-subcategory', false);
+        });
+
+        // Load Expenses from LocalStorage
+        function loadExpenses() {
+            const expenses = JSON.parse(localStorage.getItem('expenses')) || [];
+            return expenses;
+        }
+
+        // Save Expenses to LocalStorage
+        function saveExpenses(expenses) {
+            localStorage.setItem('expenses', JSON.stringify(expenses));
+        }
+
+        // Add Expense to the Table
+        function addExpenseToTable(expense, index) {
+            const tableBody = document.querySelector('#expenses-table tbody');
+            const row = document.createElement('tr');
+
+            row.innerHTML = `
+                <td>${expense.date}</td>
+                <td>$${parseFloat(expense.price).toFixed(2)}</td>
+                <td>${expense.detail}</td>
+                <td>${expense.category}</td>
+                <td>${expense.subcategory}</td>
+                <td>${expense.note}</td>
+                <td class="actions">
+                    <button class="delete-btn" data-index="${index}">Delete</button>
+                </td>
+            `;
+            tableBody.appendChild(row);
+        }
+
+        // Display All Expenses
+        function displayExpenses(expenses) {
+            const tableBody = document.querySelector('#expenses-table tbody');
+            tableBody.innerHTML = '';
+            expenses.forEach((expense, index) => {
+                addExpenseToTable(expense, index);
+            });
+            updateReports(expenses);
+        }
+
+        // Update Reports
+        function updateReports(expenses) {
+            // Calculate Total Expenses
+            const total = expenses.reduce((sum, expense) => sum + parseFloat(expense.price), 0);
+            document.getElementById('total-expenses').textContent = total.toFixed(2);
+
+            // Prepare Data for Chart
+            const categoryTotals = {};
+            expenses.forEach(expense => {
+                if (categoryTotals[expense.category]) {
+                    categoryTotals[expense.category] += parseFloat(expense.price);
+                } else {
+                    categoryTotals[expense.category] = parseFloat(expense.price);
+                }
+            });
+
+            // Render Chart
+            renderChart(categoryTotals);
+        }
+
+        // Render Chart using Canvas
+        function renderChart(data) {
+            const canvas = document.getElementById('expenses-chart');
+            const ctx = canvas.getContext('2d');
+            // Clear previous chart
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const labels = Object.keys(data);
+            const values = Object.values(data);
+
+            // Define chart dimensions
+            const chartHeight = canvas.height - 50;
+            const chartWidth = canvas.width - 100;
+            const barWidth = 40;
+            const gap = 30;
+            const maxVal = Math.max(...values, 100);
+
+            // Draw Axes
+            ctx.beginPath();
+            ctx.moveTo(50, 10);
+            ctx.lineTo(50, chartHeight + 10);
+            ctx.lineTo(chartWidth + 50, chartHeight + 10);
+            ctx.stroke();
+
+            // Draw Bars
+            labels.forEach((label, index) => {
+                const barHeight = (values[index] / maxVal) * chartHeight;
+                const x = 70 + index * (barWidth + gap);
+                const y = chartHeight + 10 - barHeight;
+                ctx.fillStyle = '#28a745';
+                ctx.fillRect(x, y, barWidth, barHeight);
+
+                // Labels
+                ctx.fillStyle = '#000';
+                ctx.textAlign = 'center';
+                ctx.fillText(label, x + barWidth / 2, chartHeight + 30);
+
+                // Values
+                ctx.fillText(`$${values[index].toFixed(2)}`, x + barWidth / 2, y - 10);
+            });
+        }
+
+        // Initialize App
+        function init() {
+            const expenses = loadExpenses();
+            displayExpenses(expenses);
+            populateCategoryDropdown('parent-category');
+            populateCategoryDropdown('select-edit-category');
+            populateCategoryDropdown('select-edit-subcategory');
+            setupPeriodicBackup(); // Start periodic backups
+        }
+
+        // Handle Add Expense Form Submission
+        document.getElementById('expense-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const date = document.getElementById('date').value;
+            const price = document.getElementById('price').value;
+            const detail = document.getElementById('detail').value;
+            const category = document.getElementById('category').value;
+            const subcategory = document.getElementById('subcategory').value;
+            const note = document.getElementById('note').value;
+
+            const newExpense = { date, price, detail, category, subcategory, note };
+            const expenses = loadExpenses();
+            expenses.push(newExpense);
+            saveExpenses(expenses);
+            displayExpenses(expenses);
+            this.reset();
+
+            // Reset Subcategory after adding
+            document.getElementById('subcategory').innerHTML = '<option value="">Select Subcategory</option>';
+
+            // Auto Backup After Each Entry
+            autoBackup();
+        });
+
+        // Handle Delete Expense
+        document.querySelector('#expenses-table tbody').addEventListener('click', function(e) {
+            if (e.target.classList.contains('delete-btn')) {
+                const index = e.target.getAttribute('data-index');
+                let expenses = loadExpenses();
+                if (index > -1 && index < expenses.length) {
+                    expenses.splice(index, 1);
+                    saveExpenses(expenses);
+                    displayExpenses(expenses);
+                    // Auto Backup After Deletion
+                    autoBackup();
+                }
+            }
+        });
+
+        // Handle Filter Form Submission
+        document.getElementById('filter-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const filterDate = document.getElementById('filter-date').value;
+            const filterCategory = document.getElementById('filter-category').value;
+            const filterSubcategory = document.getElementById('filter-subcategory').value;
+
+            let expenses = loadExpenses();
+
+            if (filterDate) {
+                expenses = expenses.filter(exp => exp.date === filterDate);
+            }
+
+            if (filterCategory) {
+                expenses = expenses.filter(exp => exp.category === filterCategory);
+            }
+
+            if (filterSubcategory) {
+                expenses = expenses.filter(exp => exp.subcategory === filterSubcategory);
+            }
+
+            displayExpenses(expenses);
+        });
+
+        // Handle Clear Filters
+        document.getElementById('clear-filters').addEventListener('click', function() {
+            document.getElementById('filter-form').reset();
+            displayExpenses(loadExpenses());
+
+            // Reset Subcategory in Filter Form
+            document.getElementById('filter-subcategory').innerHTML = '<option value="">All Subcategories</option>';
+        });
+
+        // Export Data Function
+        function exportData() {
+            const expenses = loadExpenses();
+            const dataStr = JSON.stringify(expenses, null, 4);
+            const blob = new Blob([dataStr], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'expenses_backup.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Import Data Function
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedExpenses = JSON.parse(e.target.result);
+                    if (Array.isArray(importedExpenses)) {
+                        saveExpenses(importedExpenses);
+                        displayExpenses(importedExpenses);
+                        alert('Data imported successfully!');
+                        // Auto Backup After Import
+                        autoBackup();
+                    } else {
+                        alert('Invalid data format.');
+                    }
+                } catch (error) {
+                    alert('Error parsing JSON file.');
+                    console.error(error);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // Event Listeners for Export and Import Buttons
+        document.getElementById('export-btn').addEventListener('click', exportData);
+        document.getElementById('import-btn').addEventListener('click', function() {
+            document.getElementById('import-file').click();
+        });
+        document.getElementById('import-file').addEventListener('change', importData);
+
+        // Auto Backup Function
+        function autoBackup() {
+            const expenses = loadExpenses();
+            const timestamp = new Date().toISOString();
+            const backupEntry = {
+                timestamp: timestamp,
+                data: expenses
+            };
+            let backups = JSON.parse(localStorage.getItem('backups')) || [];
+            backups.push(backupEntry);
+
+            // Limit the number of backups to 10 to prevent LocalStorage overflow
+            if (backups.length > 10) {
+                backups.shift(); // Remove the oldest backup
+            }
+
+            localStorage.setItem('backups', JSON.stringify(backups));
+
+            // Update Backup Status
+            document.getElementById('backup-status').textContent = `Backup created at ${new Date(timestamp).toLocaleString()}`;
+            setTimeout(() => {
+                document.getElementById('backup-status').textContent = '';
+            }, 5000); // Clear message after 5 seconds
+        }
+
+        // Periodic Auto Backup (e.g., every 10 minutes)
+        function setupPeriodicBackup() {
+            const intervalMinutes = 10;
+            setInterval(() => {
+                autoBackup();
+            }, intervalMinutes * 60 * 1000);
+        }
+
+        // Modal Functionality
+        // Add Category Modal
+        const addCategoryModal = document.getElementById('add-category-modal');
+        const addCategoryBtn = document.getElementById('add-category-btn');
+        const closeAddCategory = document.getElementById('close-add-category');
+
+        addCategoryBtn.onclick = function() {
+            addCategoryModal.style.display = "block";
+        }
+
+        closeAddCategory.onclick = function() {
+            addCategoryModal.style.display = "none";
+            document.getElementById('add-category-form').reset();
+        }
+
+        window.onclick = function(event) {
+            if (event.target == addCategoryModal) {
+                addCategoryModal.style.display = "none";
+                document.getElementById('add-category-form').reset();
+            }
+            if (event.target == addSubcategoryModal) {
+                addSubcategoryModal.style.display = "none";
+                document.getElementById('add-subcategory-form').reset();
+            }
+            if (event.target == editCategoryModal) {
+                editCategoryModal.style.display = "none";
+                document.getElementById('edit-category-form').reset();
+            }
+            if (event.target == editSubcategoryModal) {
+                editSubcategoryModal.style.display = "none";
+                document.getElementById('edit-subcategory-form').reset();
+            }
+        }
+
+        // Add Subcategory Modal
+        const addSubcategoryModal = document.getElementById('add-subcategory-modal');
+        const addSubcategoryBtn = document.getElementById('add-subcategory-btn');
+        const closeAddSubcategory = document.getElementById('close-add-subcategory');
+
+        addSubcategoryBtn.onclick = function() {
+            populateCategoryDropdown('parent-category'); // Refresh categories
+            addSubcategoryModal.style.display = "block";
+        }
+
+        closeAddSubcategory.onclick = function() {
+            addSubcategoryModal.style.display = "none";
+            document.getElementById('add-subcategory-form').reset();
+        }
+
+        // Edit Category Modal
+        const editCategoryModal = document.getElementById('edit-category-modal');
+        const editCategoryBtn = document.getElementById('edit-category-btn');
+        const closeEditCategory = document.getElementById('close-edit-category');
+
+        editCategoryBtn.onclick = function() {
+            populateCategoryDropdown('select-edit-category'); // Refresh categories
+            editCategoryModal.style.display = "block";
+        }
+
+        closeEditCategory.onclick = function() {
+            editCategoryModal.style.display = "none";
+            document.getElementById('edit-category-form').reset();
+        }
+
+        // Edit Subcategory Modal
+        const editSubcategoryModal = document.getElementById('edit-subcategory-modal');
+        const editSubcategoryBtn = document.getElementById('edit-subcategory-btn');
+        const closeEditSubcategory = document.getElementById('close-edit-subcategory');
+
+        editSubcategoryBtn.onclick = function() {
+            populateSubcategoryDropdown('', 'select-edit-subcategory');
+            editSubcategoryModal.style.display = "block";
+        }
+
+        closeEditSubcategory.onclick = function() {
+            editSubcategoryModal.style.display = "none";
+            document.getElementById('edit-subcategory-form').reset();
+        }
+
+        // Handle Add Category Form Submission
+        document.getElementById('add-category-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const newCategory = document.getElementById('new-category').value.trim();
+            if (newCategory === "") {
+                alert("Category name cannot be empty.");
+                return;
+            }
+            if (categories[newCategory]) {
+                alert("Category already exists.");
+                return;
+            }
+            categories[newCategory] = [];
+            saveCategories(categories);
+            populateCategoryDropdown('category');
+            populateCategoryDropdown('filter-category');
+            populateCategoryDropdown('parent-category');
+            populateCategoryDropdown('select-edit-category');
+            populateCategoryDropdown('select-edit-subcategory');
+            alert("Category added successfully!");
+            addCategoryModal.style.display = "none";
+            document.getElementById('add-category-form').reset();
+        });
+
+        // Handle Add Subcategory Form Submission
+        document.getElementById('add-subcategory-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const newSubcategory = document.getElementById('new-subcategory-name').value.trim();
+            const parentCategory = document.getElementById('parent-category').value;
+            if (newSubcategory === "" || parentCategory === "") {
+                alert("Subcategory name and parent category cannot be empty.");
+                return;
+            }
+            if (categories[parentCategory].includes(newSubcategory)) {
+                alert("Subcategory already exists under this category.");
+                return;
+            }
+            categories[parentCategory].push(newSubcategory);
+            saveCategories(categories);
+            populateSubcategoryDropdown(parentCategory, 'subcategory');
+            populateSubcategoryDropdown(parentCategory, 'filter-subcategory', true);
+            populateSubcategoryDropdown(parentCategory, 'select-edit-subcategory');
+            alert("Subcategory added successfully!");
+            addSubcategoryModal.style.display = "none";
+            document.getElementById('add-subcategory-form').reset();
+        });
+
+        // Handle Edit Category Form Submission
+        document.getElementById('edit-category-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const selectedCategory = document.getElementById('select-edit-category').value;
+            const newCategoryName = document.getElementById('edit-category-name').value.trim();
+            if (selectedCategory === "" || newCategoryName === "") {
+                alert("Please select a category and enter a new name.");
+                return;
+            }
+            if (categories[newCategoryName]) {
+                alert("A category with this name already exists.");
+                return;
+            }
+            categories[newCategoryName] = categories[selectedCategory];
+            delete categories[selectedCategory];
+            saveCategories(categories);
+            populateCategoryDropdown('category');
+            populateCategoryDropdown('filter-category');
+            populateCategoryDropdown('parent-category');
+            populateCategoryDropdown('select-edit-category');
+            populateCategoryDropdown('select-edit-subcategory');
+            // Update existing expenses with the new category name
+            let expenses = loadExpenses();
+            expenses.forEach(expense => {
+                if (expense.category === selectedCategory) {
+                    expense.category = newCategoryName;
+                }
+            });
+            saveExpenses(expenses);
+            displayExpenses(expenses);
+            alert("Category updated successfully!");
+            editCategoryModal.style.display = "none";
+            document.getElementById('edit-category-form').reset();
+        });
+
+        // Handle Edit Subcategory Form Submission
+        document.getElementById('edit-subcategory-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const selectedSubcategory = document.getElementById('select-edit-subcategory').value;
+            const newSubcategoryName = document.getElementById('edit-subcategory-name').value.trim();
+            if (selectedSubcategory === "" || newSubcategoryName === "") {
+                alert("Please select a subcategory and enter a new name.");
+                return;
+            }
+
+            // Find which category this subcategory belongs to
+            let parentCategory = "";
+            for (let category in categories) {
+                if (categories[category].includes(selectedSubcategory)) {
+                    parentCategory = category;
+                    break;
+                }
+            }
+
+            if (parentCategory === "") {
+                alert("Parent category not found.");
+                return;
+            }
+
+            if (categories[parentCategory].includes(newSubcategoryName)) {
+                alert("A subcategory with this name already exists under the selected category.");
+                return;
+            }
+
+            // Replace the old subcategory with the new one
+            const index = categories[parentCategory].indexOf(selectedSubcategory);
+            if (index !== -1) {
+                categories[parentCategory][index] = newSubcategoryName;
+                saveCategories(categories);
+                populateSubcategoryDropdown(parentCategory, 'subcategory');
+                populateSubcategoryDropdown(parentCategory, 'filter-subcategory', true);
+                populateSubcategoryDropdown(parentCategory, 'select-edit-subcategory');
+                // Update existing expenses with the new subcategory name
+                let expenses = loadExpenses();
+                expenses.forEach(expense => {
+                    if (expense.subcategory === selectedSubcategory) {
+                        expense.subcategory = newSubcategoryName;
+                    }
+                });
+                saveExpenses(expenses);
+                displayExpenses(expenses);
+                alert("Subcategory updated successfully!");
+                editSubcategoryModal.style.display = "none";
+                document.getElementById('edit-subcategory-form').reset();
+            } else {
+                alert("Subcategory not found.");
+            }
+        });
+
+        // Auto Backup Function
+        function autoBackup() {
+            const expenses = loadExpenses();
+            const timestamp = new Date().toISOString();
+            const backupEntry = {
+                timestamp: timestamp,
+                data: expenses
+            };
+            let backups = JSON.parse(localStorage.getItem('backups')) || [];
+            backups.push(backupEntry);
+
+            // Limit the number of backups to 10 to prevent LocalStorage overflow
+            if (backups.length > 10) {
+                backups.shift(); // Remove the oldest backup
+            }
+
+            localStorage.setItem('backups', JSON.stringify(backups));
+
+            // Update Backup Status
+            document.getElementById('backup-status').textContent = `Backup created at ${new Date(timestamp).toLocaleString()}`;
+            setTimeout(() => {
+                document.getElementById('backup-status').textContent = '';
+            }, 5000); // Clear message after 5 seconds
+        }
+
+        // Periodic Auto Backup (e.g., every 10 minutes)
+        function setupPeriodicBackup() {
+            const intervalMinutes = 10;
+            setInterval(() => {
+                autoBackup();
+            }, intervalMinutes * 60 * 1000);
+        }
+
+        // Initialize App
+        function init() {
+            const expenses = loadExpenses();
+            displayExpenses(expenses);
+            populateCategoryDropdown('parent-category');
+            populateCategoryDropdown('select-edit-category');
+            populateCategoryDropdown('select-edit-subcategory');
+            setupPeriodicBackup(); // Start periodic backups
+        }
+
+        // Initialize the application on page load
+        window.onload = init;
+    </script>
+</body>
+</html>
